@@ -19,7 +19,13 @@ $UWPAppstoRemove = @(
     "Microsoft.XboxSpeechToTextOverlay", 
     "Microsoft.YourPhone",
     "Microsoft.ZuneMusic",
-    "Microsoft.ZuneVideo"
+    "Microsoft.ZuneVideo",
+    "Microsoft.XboxGameCallableUI",
+    "Microsoft.GamingApp",
+    "Microsoft.Todos",
+    "Microsoft.Windows.DevHome",
+    "Microsoft.Windows.Photos",
+    "Microsoft.WindowsCamera"
 )
 
 # Remove preinstalled Microsoft Store applications for all users and from the Windows image
