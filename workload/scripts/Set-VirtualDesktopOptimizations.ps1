@@ -13,12 +13,16 @@ $OutputPath = $LocalPath + '\' + $Zip
 
 try 
 {
+    
     Write-Host 'Virtual Desktop Optimization Tool (VDOT): Begin Prerequisites'
 
     # Create directory for VDOT
     New-Item -Path $Drive -Name $Directory -ItemType 'Directory' -ErrorAction 'SilentlyContinue'
     Set-Location $WorkingDirectory
     Write-Host 'Created the local directory'
+
+    Write-Host 'Virtual Desktop Optimization Tool (VDOT): Setting security protocols'
+    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 
     # Download VDOT
     Invoke-WebRequest -Uri $Url -OutFile $OutputPath
