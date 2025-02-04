@@ -22,7 +22,7 @@ try
     Write-Host 'Created the local directory'
 
     Write-Host 'Virtual Desktop Optimization Tool (VDOT): Setting security protocols'
-    ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 | SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
 
     # Download VDOT
     Invoke-WebRequest -Uri $Url -OutFile $OutputPath
