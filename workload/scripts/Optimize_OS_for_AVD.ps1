@@ -21,20 +21,32 @@ $osOptURL = 'https://raw.githubusercontent.com/The-Virtual-Desktop-Team/Virtual-
 $osOptURLexe = 'optimize.ps1'
 Invoke-WebRequest -Uri $osOptURL -OutFile $osOptURLexe
 
-# Patch: override the Win10_VirtualDesktop_Optimize.ps1 - setting 'Set-NetAdapterAdvancedProperty'(see readme.md)
-Write-Host 'Patch: Disabling Set-NetAdapterAdvancedProperty'
+# Patch 1: override the Win10_VirtualDesktop_Optimize.ps1 - setting 'Set-NetAdapterAdvancedProperty'(see readme.md)
+Write-Host 'Patch 1: Disabling Set-NetAdapterAdvancedProperty in Win10_VirtualDesktop_Optimize.ps1'
 $updatePath = 'C:\optimize\Virtual-Desktop-Optimization-Tool-main\Win10_VirtualDesktop_Optimize.ps1'
- ((Get-Content -Path $updatePath -Raw) -replace 'Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB', '#Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB') | Set-Content -Path $updatePath
+((Get-Content -Path $updatePath -Raw) -replace 'Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB', '#Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB') | Set-Content -Path $updatePath
 
-
-
-Write-Host 'Patch: Disabling Set-NetAdapterAdvancedProperty in Windows_VDOT.ps1'
+# Patch 2: Disabling Set-NetAdapterAdvancedProperty in Windows_VDOT.ps1
+Write-Host 'Patch 2: Disabling Set-NetAdapterAdvancedProperty in Windows_VDOT.ps1'
 $updatePath = 'C:\optimize\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1'
- ((Get-Content -Path $updatePath -Raw) -replace 'Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB', '#Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB') | Set-Content -Path $updatePath
+((Get-Content -Path $updatePath -Raw) -replace 'Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB', '#Set-NetAdapterAdvancedProperty -DisplayName "Send Buffer Size" -DisplayValue 4MB') | Set-Content -Path $updatePath
 
+# Patch 3: Fix OneDrive removal section to avoid Access Denied errors in AIB
+Write-Host 'Patch 3: Fixing OneDrive cleanup to avoid aggressive C:\ recursion in AIB'
+$updatePath = 'C:\optimize\Virtual-Desktop-Optimization-Tool-main\Windows_VDOT.ps1'
+$content = Get-Content -Path $updatePath -Raw
 
-# Patch: override the REG UNLOAD, needs GC before, otherwise will Access Deny unload(see readme.md)
+# Replace the problematic recursive Get-ChildItem that scans entire C:\ drive
+# This line causes UnauthorizedAccessException in AIB protected directories
+$content = $content -replace "Get-ChildItem 'C:\\\*' -Recurse -Force -EA SilentlyContinue -Include OneDrive\.exe", "# AIB Patch: Skipped aggressive C:\ scan - Get-ChildItem 'C:\*' -Recurse causes Access Denied in protected directories"
 
+# Also patch the removal section if it exists
+$content = $content -replace "Remove-Item \`$\(\`$_\.FullName\) -Recurse -Force -EA SilentlyContinue", "# AIB Patch: Skipped Remove-Item"
+
+Set-Content -Path $updatePath -Value $content
+
+# Patch 4: override the REG UNLOAD, needs GC before, otherwise will Access Deny unload(see readme.md)
+Write-Host 'Patch 4: Adding garbage collection before REG UNLOAD'
 [System.Collections.ArrayList]$file = Get-Content $updatePath
 $insert = @()
 for ($i = 0; $i -lt $file.count; $i++) {
@@ -44,7 +56,9 @@ for ($i = 0; $i -lt $file.count; $i++) {
 }
 
 #add gc and sleep
-$insert | ForEach-Object { $file.insert($_, "                 Write-Host 'Patch closing handles and runnng GC before reg unload' `n              `$newKey.Handle.close()` `n              [gc]::collect() `n                Start-Sleep -Seconds 15 ") }
+$insert | ForEach-Object { $file.insert($_, "                 Write-Host 'Patch closing handles and running GC before reg unload' `n              `$newKey.Handle.close()` `n              [gc]::collect() `n                Start-Sleep -Seconds 15 ") }
+
+Set-Content $updatePath $file
 
 ### Setting the RDP ShortPath.
 Write-Host 'Configuring RDP ShortPath'
@@ -69,18 +83,15 @@ if (Test-Path $WinstationsKey) {
     New-ItemProperty -Path $WinstationsKey -Name 'fEnableScreenCaptureProtect' -ErrorAction:SilentlyContinue -PropertyType:dword -Value 1 -Force
 }
 
-Set-Content $updatePath $file
-
 # run script
-# .\optimize -WindowsVersion 2004 -Verbose
 .\Win10_VirtualDesktop_Optimize.ps1 -Verbose -AcceptEULA
 Write-Host 'AIB Customization: Finished OS Optimizations script Win10_VirtualDesktop_Optimize.ps1'
 
 # Sleep for a min
 Start-Sleep -Seconds 60
-#Running new file
 
-#Write-Host 'Running new AIB Customization script'
+#Running new file
+Write-Host 'Running Windows_VDOT.ps1 with AIB patches applied'
 .\Windows_VDOT.ps1 -Verbose -AcceptEULA
 
 Write-Host 'AIB Customization: Finished OS Optimizations script Windows_VDOT.ps1'
