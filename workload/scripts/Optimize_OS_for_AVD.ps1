@@ -83,6 +83,24 @@ if (Test-Path $WinstationsKey) {
     New-ItemProperty -Path $WinstationsKey -Name 'fEnableScreenCaptureProtect' -ErrorAction:SilentlyContinue -PropertyType:dword -Value 1 -Force
 }
 
+Set-Content $updatePath $file
+
+# Patch: Fix OneDrive cleanup to handle access denied errors gracefully
+Write-Host 'Patch: Adding error handling for OneDrive cleanup to prevent access denied errors'
+$fileContent = Get-Content $updatePath -Raw
+
+# Replace the problematic Get-ChildItem command that recursively scans C:\ with better targeted search
+# This prevents access denied errors when scanning protected system directories
+$fileContent = $fileContent -replace "Get-ChildItem 'C:\\\*' -Recurse -Force -EA SilentlyContinue -Include", "Get-ChildItem 'C:\Program Files\WindowsApps\*', 'C:\Users\*' -Force -ErrorAction SilentlyContinue -Include"
+
+# Also add -ErrorAction Stop to prevent script from failing on access denied
+$fileContent = $fileContent -replace "(Get-ChildItem.*-Recurse.*-Include.*OneDrive[^\r\n]+)", "`$1 -ErrorAction SilentlyContinue"
+
+# For any remaining C:\ recursive scans, limit to specific OneDrive locations
+$fileContent = $fileContent -replace "Get-ChildItem -Path 'C:\\' -Recurse -Force", "Get-ChildItem -Path 'C:\Program Files\WindowsApps', 'C:\Users' -Force -ErrorAction SilentlyContinue"
+
+Set-Content -Path $updatePath -Value $fileContent -Force
+
 # run script
 .\Win10_VirtualDesktop_Optimize.ps1 -Verbose -AcceptEULA
 Write-Host 'AIB Customization: Finished OS Optimizations script Win10_VirtualDesktop_Optimize.ps1'
