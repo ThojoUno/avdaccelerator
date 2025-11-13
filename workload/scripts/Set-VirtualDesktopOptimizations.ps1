@@ -13,12 +13,16 @@ $OutputPath = $LocalPath + '\' + $Zip
 
 try 
 {
+    
     Write-Host 'Virtual Desktop Optimization Tool (VDOT): Begin Prerequisites'
 
     # Create directory for VDOT
     New-Item -Path $Drive -Name $Directory -ItemType 'Directory' -ErrorAction 'SilentlyContinue'
     Set-Location $WorkingDirectory
     Write-Host 'Created the local directory'
+
+    Write-Host 'Virtual Desktop Optimization Tool (VDOT): Setting security protocols'
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
 
     # Download VDOT
     Invoke-WebRequest -Uri $Url -OutFile $OutputPath
@@ -55,7 +59,7 @@ try
 
     Write-Host 'Virtual Desktop Optimization Tool (VDOT): Completed Prerequisites'
     Write-Host 'Virtual Desktop Optimization Tool (VDOT): Begin Tool Execution'
-    .\Windows_VDOT.ps1 -Optimizations 'AppxPackages','Autologgers','DefaultUserSettings','LGPO','NetworkOptimizations','ScheduledTasks','Services','WindowsMediaPlayer' -AdvancedOptimizations 'Edge','RemoveLegacyIE' -AcceptEULA -Verbose
+    .\Windows_VDOT.ps1 -Optimizations 'AppxPackages','Autologgers','DefaultUserSettings','LocalPolicy','NetworkOptimizations','ScheduledTasks','Services','WindowsMediaPlayer' -AdvancedOptimizations 'Edge','RemoveLegacyIE','RemoveOneDrive' -AcceptEULA -Verbose
     Write-Host 'Virtual Desktop Optimization Tool (VDOT): Completed Tool Execution'  
 }
 catch 
