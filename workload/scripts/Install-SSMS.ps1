@@ -9,7 +9,20 @@ $installerUrl = "https://go.microsoft.com/fwlink/?linkid=2313753&clcid=0x409"
 try {
     # Download SSMS installer
     Write-Host "Downloading SSMS installer..."
-    Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
+    #Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $maxAttempts = 3
+    for ($i = 1; $i -le $maxAttempts; $i++) {
+        try {
+            Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing -TimeoutSec 120
+            break
+        } catch {
+            if ($i -eq $maxAttempts) { throw }
+            Write-Host "Download attempt $i failed: $($_.Exception.Message). Retrying in 15s..."
+            Start-Sleep -Seconds 15
+        }
+    }
     
     # Install SSMS silently
     Write-Host "Installing SSMS..."
