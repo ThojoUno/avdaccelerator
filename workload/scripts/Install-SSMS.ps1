@@ -4,23 +4,24 @@ Write-Host 'AIB Customization: Installing SQL Server Management Studio'
 $installerPath = "C:\Windows\Temp\SSMS-Setup.exe"
 #$installerUrl = "https://aka.ms/ssmsfullsetup"
 # Direct link to version 20.2.1
-$installerUrl = "https://go.microsoft.com/fwlink/?linkid=2313753&clcid=0x409"
+# $installerUrl = "https://go.microsoft.com/fwlink/?linkid=2313753&clcid=0x409"
+# SSMS 20.2.1 — direct Microsoft CDN URL (bypasses fwlink redirect)
+$installerUrl  = 'https://download.microsoft.com/download/7519f0ff-997c-4f36-b5aa-9a51d47dd34c/SSMS-Setup-ENU.exe'
 
 try {
     # Download SSMS installer
     Write-Host "Downloading SSMS installer..."
-    #Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $maxAttempts = 3
     for ($i = 1; $i -le $maxAttempts; $i++) {
         try {
-            Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing -TimeoutSec 120
+            Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing -TimeoutSec 900
             break
         } catch {
             if ($i -eq $maxAttempts) { throw }
-            Write-Host "Download attempt $i failed: $($_.Exception.Message). Retrying in 15s..."
-            Start-Sleep -Seconds 15
+            Write-Host "Download attempt $i failed: $($_.Exception.Message). Retrying in 30s..."
+            Start-Sleep -Seconds 30
         }
     }
     
