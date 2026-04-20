@@ -17,8 +17,22 @@ try {
     }
     
     # Download ODBC Driver installer
-    Write-Host "Downloading ODBC Driver 18 for SQL Server ($arch)..."
-    Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
+    #Write-Host "Downloading ODBC Driver 18 for SQL Server ($arch)..."
+    #Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
+    
+    # After
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $maxAttempts = 3
+    for ($i = 1; $i -le $maxAttempts; $i++) {
+        try {
+            Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing -TimeoutSec 120
+            break
+        } catch {
+            if ($i -eq $maxAttempts) { throw }
+            Write-Host "Download attempt $i failed: $($_.Exception.Message). Retrying in 15s..."
+            Start-Sleep -Seconds 15
+        }
+    }
     
     # Verify download
     if (-not (Test-Path $installerPath)) {
