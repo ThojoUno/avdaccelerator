@@ -7,14 +7,17 @@ try {
     # Determine system architecture
     $arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
     
+    $installerUrl  = 'https://download.microsoft.com/download/4/f/e/4fed6f4b-dc42-4255-b4b4-70f8e2a35a63/en-US/18.3.2.1/x64/msodbcsql.msi'
+    $installerPath = 'C:\Windows\Temp\msodbcsql_x64.msi'
+    
     # ODBC Driver 18 download URL (from Microsoft)
-    if ($arch -eq "x64") {
-        $installerUrl = "https://go.microsoft.com/fwlink/?linkid=2249004"  # ODBC Driver 18.4 x64
-        $installerPath = "C:\Windows\Temp\msodbcsql_x64.msi"
-    } else {
-        $installerUrl = "https://go.microsoft.com/fwlink/?linkid=2249003"  # ODBC Driver 18.4 x86
-        $installerPath = "C:\Windows\Temp\msodbcsql_x86.msi"
-    }
+    #if ($arch -eq "x64") {
+    #    $installerUrl = "https://go.microsoft.com/fwlink/?linkid=2249004"  # ODBC Driver 18.4 x64
+    #    $installerPath = "C:\Windows\Temp\msodbcsql_x64.msi"
+    #} else {
+    #    $installerUrl = "https://go.microsoft.com/fwlink/?linkid=2249003"  # ODBC Driver 18.4 x86
+    #    $installerPath = "C:\Windows\Temp\msodbcsql_x86.msi"
+    #}
     
     # Download ODBC Driver installer
     #Write-Host "Downloading ODBC Driver 18 for SQL Server ($arch)..."
